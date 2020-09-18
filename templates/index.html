@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+  <title>Pix2Pix Mountain</title>
+  <script> var heights = {{ heights }} </script>
+  <script src="{{ url_for('static', filename='jquery.js') }}"></script>
+  <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+  <script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <br>
+  <h1>Mountain Heightmap Model Demo</h1>
+
+  <br>
+  <div class="center" style="width:70%; text-align: center; margin-top:15px; margin-bottom:15px;">
+  Begin by using the map on the left to choose a region, or by uploading your own image.
+  <br>
+  You can then view the results in the window at the bottom of the page.
+  </div>
+  <br><br>
+
+  <table class="center" style="width:60%; border: 0px solid;">
+  <tr>
+    <td>
+        <h3 style="margin:0px 0 4px 0;">Interactive Map</h3>
+        <div class="center" id='map' style='width: 480px; height: 480px; border: 6px solid #117A60; border-radius: 6px;'></div>
+        <script>
+        mapboxgl.accessToken = "{{ token }}";
+          var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-v9', // stylesheet location
+            center: [{{ long|default(86.93, true) }}, {{ lat|default(27.97, true) }}], // (Mt. Everest) starting position [lng, lat]
+            zoom: {{ zoom|default(10.5, true) }}, // starting zoom
+            maxZoom: 11,
+            pitchWithRotate: false,
+            dragRotate: false,
+            touchZoomRotate: false,
+          });
+
+        </script>
+    </td>
+
+    <td>
+        <div style="width:20px;"></div>
+    </td>
+
+    <td>
+    </form>
+    <!-- <table class="center" style="width:90%; border: 0px solid black;">
+    <tr>
+      <th>Input Image</th>
+      <th>Inferred Heightmap</th>
+    </tr>
+    <tr> -->
+      <h4 style="margin:0px 0 2px 0;">Input Image</h4>
+      <img src="/img/trimmed.png" style="height:88%; border: 3px solid black; ">
+      <br>
+      <h4 style="margin:16px 0 2px 0;">Inferred Heightmap</h4>
+      <img src="/img/heightmap.png" style="height:88%; border: 3px solid black; ">
+    <!-- </tr> -->
+    <!-- </table> -->
+
+    </td>
+  </tr>
+      <td>
+          <!-- <br> -->
+          <script>
+          function get_map_image() {
+              var center = map.getCenter();
+              var zoom = map.getZoom();
+              if (zoom < 8.5) {
+                  alert("For best results, use more zoomed-in images.")
+              }
+              console.log("Zoom: " + zoom);
+
+              window.location.replace("/map/" + center.lng + "/" + center.lat + "/" + zoom);
+          }
+          </script>
+          <!-- <script>
+          $(document).ready(function(){
+              if ({{ scrolldown|default(false, true) }}) {
+                  var container = $('#container-title');
+                  var offset = container.offset().top;
+                  console.log(offset);
+                  $('body,html').animate({scrollTop: offset}, 800);
+              }
+          });
+          </script> -->
+          <div class="upload-btn-wrapper">
+            <button class="btn" onclick="get_map_image();">Use Image from Map</button>
+          </div>
+     </td>
+     <td></td>
+     <td>
+         <!-- <br> -->
+
+         <form action="/upload-image" method="POST" enctype="multipart/form-data">
+           <div class="upload-btn-wrapper">
+             <input type="file" name="image" id="image">
+             <button type="submit" class="btn">Upload Image from Files</button>
+           </div>
+         <br>
+     </td>
+  </tr>
+  </table>
+  <script>
+  $(document).ready(function() {
+    $('form input').change(function () {
+        $('form').submit();
+    });
+  });
+  </script>
+
+
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <script> alert("Invalid image :("); </script>
+    {% endif %}
+  {% endwith %}
+
+
+  <br><br>
+  <h2 id="container-title">Interactive Terrain Surface</h2>
+  <div id="container"></div>
+
+  <br>
+  <div class="center" style="width:70%; text-align: left;">
+  <!-- <p> -->
+      This web app uses a <a href="https://phillipi.github.io/pix2pix/">Pix2Pix</a> model to infer the heighmap terrain.
+      Results will be best when given images similar to the training data, which consisted of
+      satellite images of mountainous regions roughly 10 miles wide.
+      Other regions such as a coastline or a large city might be misinterpreted. The training set
+      had 6000 images.
+  <!-- </p> -->
+  </div>
+
+  <br><br>
+  <p>A project by <a href="https://github.com/ilyasher">Ilya Sherstyuk</a></p>
+
+</body>
+</html>

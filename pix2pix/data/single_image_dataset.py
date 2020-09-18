@@ -1,9 +1,9 @@
-from data.base_dataset import BaseDataset, get_transform
-from data.image_folder import make_dataset
+from pix2pix.data.base_dataset import BaseDataset, get_transform
+from pix2pix.data.image_folder import make_dataset
 from PIL import Image
 
 
-class SingleDataset(BaseDataset):
+class SingleImageDataset(BaseDataset):
     """This dataset class can load a set of images specified by the path --dataroot /path/to/data.
 
     It can be used for generating CycleGAN results only for one side with the model option '-model test'.
@@ -16,7 +16,7 @@ class SingleDataset(BaseDataset):
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseDataset.__init__(self, opt)
-        self.A_paths = sorted(make_dataset(opt.dataroot, opt.max_dataset_size))
+        self.A_paths = [opt.dataroot]
         input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
         self.transform = get_transform(opt, grayscale=(input_nc == 1))
 
@@ -33,8 +33,8 @@ class SingleDataset(BaseDataset):
         A_path = self.A_paths[index]
         A_img = Image.open(A_path).convert('RGB')
         A = self.transform(A_img)
-        return {'A': A, 'A_paths': A_path}
+        return {'A': A, 'B': A, 'A_paths': A_path}
 
     def __len__(self):
         """Return the total number of images in the dataset."""
-        return len(self.A_paths)
+        return 1

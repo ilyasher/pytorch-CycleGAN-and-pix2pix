@@ -1,9 +1,9 @@
 import argparse
 import os
-from util import util
+from pix2pix.util import util
 import torch
-import models
-import data
+import pix2pix.models as models
+import pix2pix.data as data
 
 
 class BaseOptions():
@@ -57,7 +57,7 @@ class BaseOptions():
         self.initialized = True
         return parser
 
-    def gather_options(self):
+    def gather_options(self, args=None):
         """Initialize our parser with basic options(only once).
         Add additional model-specific and dataset-specific options.
         These options are defined in the <modify_commandline_options> function
@@ -68,22 +68,23 @@ class BaseOptions():
             parser = self.initialize(parser)
 
         # get the basic options
-        opt, _ = parser.parse_known_args()
+        #opt, _ = parser.parse_args(args) if args else parser.parse_known_args
+        opt = parser.parse_args(args)
 
         # modify model-related parser options
         model_name = opt.model
         model_option_setter = models.get_option_setter(model_name)
         parser = model_option_setter(parser, self.isTrain)
-        opt, _ = parser.parse_known_args()  # parse again with new defaults
+        opt = parser.parse_args(args)
+        # opt, _ = parser.parse_known_args()  # parse again with new defaults
 
         # modify dataset-related parser options
         dataset_name = opt.dataset_mode
         dataset_option_setter = data.get_option_setter(dataset_name)
         parser = dataset_option_setter(parser, self.isTrain)
-
         # save and return the parser
         self.parser = parser
-        return parser.parse_args()
+        return parser.parse_args(args)
 
     def print_options(self, opt):
         """Print and save options
@@ -103,16 +104,16 @@ class BaseOptions():
         print(message)
 
         # save to the disk
-        expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
-        util.mkdirs(expr_dir)
-        file_name = os.path.join(expr_dir, '{}_opt.txt'.format(opt.phase))
-        with open(file_name, 'wt') as opt_file:
-            opt_file.write(message)
-            opt_file.write('\n')
+        # expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        # util.mkdirs(expr_dir)
+        # file_name = os.path.join(expr_dir, '{}_opt.txt'.format(opt.phase))
+        # with open(file_name, 'wt') as opt_file:
+        #     opt_file.write(message)
+        #     opt_file.write('\n')
 
-    def parse(self):
+    def parse(self, args=None):
         """Parse our options, create checkpoints directory suffix, and set up gpu device."""
-        opt = self.gather_options()
+        opt = self.gather_options(args)
         opt.isTrain = self.isTrain   # train or test
 
         # process opt.suffix
@@ -123,14 +124,15 @@ class BaseOptions():
         self.print_options(opt)
 
         # set gpu ids
-        str_ids = opt.gpu_ids.split(',')
-        opt.gpu_ids = []
-        for str_id in str_ids:
-            id = int(str_id)
-            if id >= 0:
-                opt.gpu_ids.append(id)
-        if len(opt.gpu_ids) > 0:
-            torch.cuda.set_device(opt.gpu_ids[0])
+        # str_ids = opt.gpu_ids.split(',')
+        # opt.gpu_ids = []
+        # for str_id in str_ids:
+        #     id = int(str_id)
+        #     if id >= 0:
+        #         opt.gpu_ids.append(id)
+        # if len(opt.gpu_ids) > 0:
+        #     torch.cuda.set_device(opt.gpu_ids[0])
+        opt.gpu_ids = [] # set to cpu
 
         self.opt = opt
         return self.opt
